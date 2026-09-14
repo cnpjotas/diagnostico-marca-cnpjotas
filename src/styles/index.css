@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --brand-green: #4FA180;
+    --brand-green-light: #5CBD97;
+    --brand-green-dark: #17332A;
+    --brand-gold: #F6B037;
+    --brand-gold-tint: #FDF3E3;
+    --brand-green-tint: #EAF4EF;
+    --brand-ink: #333333;
+    --brand-muted: #737373;
+    --brand-surface: #F8FBF9;
+    --brand-border: #E1E8E4;
+    --brand-danger: #B42318;
+    --brand-danger-tint: #FEF3F2;
+  }
+
+  body {
+    background-color: var(--brand-surface);
+    color: var(--brand-ink);
+    font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseSubtle {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.35s ease-out forwards;
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 2.5s infinite ease-in-out;
+}
