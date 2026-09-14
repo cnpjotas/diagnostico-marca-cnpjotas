@@ -23,17 +23,13 @@ export function ResultadoStep({ cadastro, resultado, aoRefazer }: Props) {
   const { perfil, scorePercentual, pontosCriticos } = resultado;
 
   const linkWhatsApp = useMemo(() => {
-    const nomeMarca = cadastro?.nomeDaMarca || "Minha Marca";
-    const nomeResp = cadastro?.nome || "Responsável";
-    const seg = cadastro?.segmento || "Geral";
-
     const textoMensagem = encodeURIComponent(
       `Olá, equipe Cnpjotas! 👋\n\n` +
         `Acabei de realizar o Diagnóstico de Segurança de Marca para a minha empresa:\n` +
-        `🏷️ *Marca:* ${nomeMarca}\n` +
-        `👤 *Responsável:* ${nomeResp}\n` +
+        `🏷️ *Marca:* ${cadastro.nomeDaMarca}\n` +
+        `👤 *Responsável:* ${cadastro.nome}\n` +
         `📊 *Score de Segurança:* ${scorePercentual}% (${perfil.titulo})\n` +
-        `🏢 *Segmento:* ${seg}\n\n` +
+        `🏢 *Segmento:* ${cadastro.segmento}\n\n` +
         `Gostaria de solicitar a *Pesquisa de Viabilidade Gratuita* no INPI e saber como registrar minha marca com a Cnpjotas!`
     );
 
@@ -50,7 +46,7 @@ export function ResultadoStep({ cadastro, resultado, aoRefazer }: Props) {
           Diagnóstico Concluído
         </span>
         <h2 className="text-xl sm:text-2xl font-extrabold text-[#17332A] tracking-tight">
-          Segurança da marca <span className="text-[#4FA180]">{cadastro?.nomeDaMarca || "Sua Marca"}</span>
+          Segurança da marca <span className="text-[#4FA180]">{cadastro.nomeDaMarca}</span>
         </h2>
       </div>
 

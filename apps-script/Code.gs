@@ -7,7 +7,17 @@
  * pode enviar notificações para a equipe comercial de Registro de Marca.
  */
 
+// =========================================================================
+// CONFIGURAÇÕES DO SISTEMA
+// =========================================================================
 const SHEET_NAME = "Leads_Marca_2026";
+
+// 👉 Coloque aqui o e-mail (ou e-mails separados por vírgula) que receberá o alerta
+// Exemplo: "comercial@cnpjotas.com.br" ou "socio1@empresa.com, socio2@empresa.com"
+const EMAIL_DESTINO = "contato@cnpjotas.com.br"; 
+
+// Notificar a cada preenchimento (true = sempre notificar, false = apenas alto risco)
+const NOTIFICAR_SEMPRE = true;
 
 function doPost(e) {
   try {
@@ -78,22 +88,62 @@ function doPost(e) {
 
     aba.appendRow(linha);
 
-    // Opcional: Envio de alerta por e-mail para o comercial da Cnpjotas
-    const emailNotificacao = PropertiesService.getScriptProperties().getProperty("EMAIL_COMERCIAL");
-    if (emailNotificacao && (resultado.nivelRisco === "Crítico" || resultado.nivelRisco === "Alto")) {
-      const assunto = "🚨 Novo Lead Quente: Registro de Marca (" + cadastro.nomeDaMarca + ") - Risco " + resultado.nivelRisco;
-      const corpo =
-        "Um novo diagnóstico de alta prioridade foi concluído:\n\n" +
-        "• Marca: " + cadastro.nomeDaMarca + "\n" +
-        "• Responsável: " + cadastro.nome + "\n" +
-        "• WhatsApp: " + cadastro.telefone + "\n" +
-        "• E-mail: " + cadastro.email + "\n" +
-        "• Score de Segurança: " + resultado.scorePercentual + "% (" + resultado.perfilTitulo + ")\n" +
-        "• Segmento: " + cadastro.segmento + "\n" +
-        "• Porte: " + cadastro.faturamentoOuPorte + "\n\n" +
-        "Acesse a planilha para fazer o primeiro contato e oferecer a Pesquisa de Viabilidade Gratuita!";
+    // =========================================================================
+    // ENVIO DE NOTIFICAÇÃO POR E-MAIL
+    // =========================================================================
+    const emailConfigurado = EMAIL_DESTINO || PropertiesService.getScriptProperties().getProperty("EMAIL_COMERCIAL");
 
-      MailApp.sendEmail(emailNotificacao, assunto, corpo);
+    if (emailConfigurado && (NOTIFICAR_SEMPRE || resultado.nivelRisco === "Crítico" || resultado.nivelRisco === "Alto")) {
+      const telLimpo = String(cadastro.telefone).replace(/\D/g, "");
+      const linkWhatsApp = "https://wa.me/55" + telLimpo;
+
+      const emojiRisco = resultado.nivelRisco === "Crítico" ? "🚨" : resultado.nivelRisco === "Alto" ? "⚠️" : "📊";
+      const assunto = emojiRisco + " Novo Lead no Diagnóstico: " + cadastro.nomeDaMarca + " (Score " + resultado.scorePercentual + "%)";
+
+      const htmlCorpo = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333333; line-height: 1.5;">
+          <div style="background-color: #17332A; color: #ffffff; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
+            <h2 style="margin: 0; font-size: 20px;">Novo Diagnóstico de Marca Concluído</h2>
+            <p style="margin: 5px 0 0; font-size: 13px; opacity: 0.85;">Cnpjotas Proteção de Marcas</p>
+          </div>
+          
+          <div style="background-color: #F8FBF9; padding: 20px; border: 1px solid #E1E8E4; border-top: none; border-radius: 0 0 8px 8px;">
+            <div style="background-color: #ffffff; padding: 15px; border-radius: 8px; border: 1px solid #E1E8E4; margin-bottom: 15px;">
+              <h3 style="margin: 0 0 10px; color: #17332A; font-size: 16px; border-bottom: 2px solid #5CBD97; padding-bottom: 5px;">
+                🏷️ Dados do Lead
+              </h3>
+              <p style="margin: 6px 0;"><strong>Nome:</strong> ${cadastro.nome}</p>
+              <p style="margin: 6px 0;"><strong>Marca:</strong> <span style="font-size: 15px; color: #17332A; font-weight: bold;">${cadastro.nomeDaMarca}</span></p>
+              <p style="margin: 6px 0;"><strong>WhatsApp:</strong> <a href="${linkWhatsApp}" style="color: #4FA180; font-weight: bold;">${cadastro.telefone}</a> (Clique para abrir WhatsApp)</p>
+              <p style="margin: 6px 0;"><strong>E-mail:</strong> <a href="mailto:${cadastro.email}">${cadastro.email}</a></p>
+              <p style="margin: 6px 0;"><strong>Segmento:</strong> ${cadastro.segmento || "Não informado"}</p>
+              <p style="margin: 6px 0;"><strong>Faturamento/Porte:</strong> ${cadastro.faturamentoOuPorte || "Não informado"}</p>
+            </div>
+
+            <div style="background-color: #ffffff; padding: 15px; border-radius: 8px; border: 1px solid #E1E8E4; margin-bottom: 15px;">
+              <h3 style="margin: 0 0 10px; color: #17332A; font-size: 16px; border-bottom: 2px solid #5CBD97; padding-bottom: 5px;">
+                📊 Resultado do Teste
+              </h3>
+              <p style="margin: 6px 0;"><strong>Score de Segurança:</strong> <span style="font-size: 16px; font-weight: bold; color: #17332A;">${resultado.scorePercentual}%</span></p>
+              <p style="margin: 6px 0;"><strong>Perfil:</strong> ${resultado.perfilTitulo}</p>
+              <p style="margin: 6px 0;"><strong>Nível de Risco:</strong> <span style="font-weight: bold;">${resultado.nivelRisco}</span></p>
+              ${vulnerabilidadesTexto ? `<p style="margin: 6px 0;"><strong>Vulnerabilidades:</strong> <span style="color: #B42318;">${vulnerabilidadesTexto}</span></p>` : ""}
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+              <a href="${linkWhatsApp}" style="background-color: #25D366; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block;">
+                Chamar no WhatsApp agora
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+
+      MailApp.sendEmail({
+        to: emailConfigurado,
+        subject: assunto,
+        htmlBody: htmlCorpo,
+      });
     }
 
     return respostaJson({ sucesso: true, mensagem: "Lead gravado com sucesso." }, 200);
